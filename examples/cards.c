@@ -37,7 +37,7 @@ void randomize_cards(player_t *player) {
 
 int check_stacks(player_t *player) {
     int count = 0;
-    for (int i = 0; i < MAX_CARDS - 1; i++) {
+    for (int i = 0; i < MAX_CARDS; i++) {
         if (player->cards[i] >= 4) {
             player->stacks += 1;
             player->cards[i] -= 4;
@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
             active_player = &game.player;
             idle_player = &game.enemy;
 
+            print("\n");
             print(active_player->label);
             print(" stacks: ");
             intstr(active_player->stacks, buf);
@@ -106,8 +107,7 @@ int main(int argc, char **argv) {
             print("\n");
 
             print_deck(&game.player);
-            print("Which card do you want to ask?\n");
-            print("> ");
+            print("Which card do you want to ask? > ");
 
             count = read(buf, 3) - 1;
             if (count == 1) {
@@ -128,6 +128,9 @@ int main(int argc, char **argv) {
             } else if (count == 2) {
                 if (buf[0] == '1' && buf[1] == '0') {
                     card = 9;
+                } else {
+                    print("This is not a valid card\n");
+                    continue;
                 }
             } else {
                 print("This is not a valid card\n");
@@ -138,13 +141,13 @@ int main(int argc, char **argv) {
                 print("You dont have such card\n");
                 continue;
             }
+
+            print("\n");
         } else {
             active_player = &game.enemy;
             idle_player = &game.player;
-        }
 
-        // Enemy """AI"""
-        if (game.turn == ENEMY) {
+            // Enemy """AI"""
             while (1) {
                 card = randuint() % MAX_CARDS;
                 if (active_player->cards[card] == 0) {
@@ -156,6 +159,7 @@ int main(int argc, char **argv) {
 
         count = check_cards(active_player, idle_player, card);
         if (count > 0) {
+            print("=> ");
             print(active_player->label);
             print(" took ");
             intstr(count, buf);
@@ -166,6 +170,7 @@ int main(int argc, char **argv) {
             print(idle_player->label);
             print("\n");
         } else {
+            print("=> ");
             print(active_player->label);
             print(" asked ");
             print(idle_player->label);
@@ -177,18 +182,21 @@ int main(int argc, char **argv) {
 
             if (game.turn == PLAYER) {
                 card = draw_card(active_player);
+                print("=> ");
                 print(active_player->label);
                 print(" drew ");
                 print(card_labels[card]);
                 print("\n");
                 game.turn = ENEMY;
             } else {
+                draw_card(active_player);
                 game.turn = PLAYER;
             }
         }
 
         count = check_stacks(active_player);
         if (count > 0) {
+            print("=> ");
             print(active_player->label);
             print(" finished a stack\n");
 
