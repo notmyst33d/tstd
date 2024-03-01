@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -e
+
 CC=clang
 AS=as
 LD=ld.lld
@@ -8,22 +10,38 @@ STRIP=llvm-strip
 ARCH=x64
 CFLAGS="-Wall -Oz -Iinclude -fno-builtin -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector"
 
-mkdir -p build
+mkdir -p out
 
-$AS -msyntax=intel -mnaked-reg -o build/sys.o src/$ARCH/sys.S
-$AS -msyntax=intel -mnaked-reg -o build/crt.o src/$ARCH/crt.S
-$CC $CFLAGS -c -o build/io.o src/io.c
-$CC $CFLAGS -c -o build/str.o src/str.c
-$CC $CFLAGS -c -o build/conv.o src/conv.c
+assemble() {
+    $AS -msyntax=intel -mnaked-reg -o out/$(basename $1 .S).o src/$ARCH/$1
+}
 
-$CC $CFLAGS -c -o build/calc.o examples/calc.c
+compile() {
+    $CC $CFLAGS -c -o out/$(basename $1 .c).o $1
+}
 
-$LD -o build/calc \
-	build/calc.o \
-    build/crt.o \
-    build/io.o \
-	build/sys.o \
-	build/str.o \
-	build/conv.o
+link() {
+    $LD -o out/$1 \
+        out/$1.o \
+        out/crt.o \
+        out/io.o \
+        out/sys.o \
+        out/str.o \
+        out/conv.o
+}
 
-$STRIP -R .comment build/calc
+fullstrip() {
+    $STRIP -R .comment -R .note.gnu.property -R .note.gnu.build-id out/$1
+}
+
+assemble sys.S
+assemble crt.S
+
+compile src/io.c
+compile src/str.c
+compile src/conv.c
+compile examples/cards.c
+link cards
+fullstrip cards
+
+rm out/*.o

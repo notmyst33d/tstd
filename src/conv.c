@@ -2,7 +2,8 @@
 
 const char *digits = "0123456789";
 
-// Int to string conversion
+// Old int to string conversion
+/*
 void intstr(int i, char *buf) {
     int count = 0;
     int start = 0;
@@ -33,6 +34,25 @@ void intstr(int i, char *buf) {
     }
 
     buf[count + start + 1] = 0;
+}
+*/
+
+// New int to string conversion (shamelessly stolen)
+void intstr(int num, char buf[]) {
+    int i = 0, sign;
+
+    if ((sign = num) < 0)
+        num = -num;
+
+    do {
+        buf[i++] = num % 10 + '0';
+    } while ((num /= 10) > 0);
+
+    if (sign < 0)
+        buf[i++] = '-';
+
+    buf[i] = '\0';
+    strrev(buf);
 }
 
 // String to int conversion
